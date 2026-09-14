@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "548593756786",
+    "project_id": "bsit4b-elect-4",
+    "storage_bucket": "bsit4b-elect-4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:548593756786:android:f801c95375a3e29a6af0eb",
+        "android_client_info": {
+          "package_name": "com.example.flutter_firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbY2RMv4sZtX7IfQZFyXCatJ-CyNUdSeM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
