@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_firebase/create_student.dart';
 
 class StudentPage extends StatefulWidget {
   const new({super.key});
@@ -14,97 +15,264 @@ class _StudentPageState extends State<StudentPage> {
       .instance
       .collection('students');
 
-  // Add student in the Firestore database
-  Future<void> saveTestData() async {
-    try {
-      await students.add({
-        'name': 'Juan Dela Cruz',
-        'course': 'BS in Information Technology',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+  // Student initials
+  String getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
 
-      if (!mounted) return;
+    if (name.trim().isEmpty) return '?';
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Successfully created.')));
-    } on FirebaseException catch (error) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.message ?? 'Unable to save the student.')),
-      );
+    if (parts.length == 1) {
+      return parts.first[0].toUpperCase();
     }
+
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
+    const primaryColor = Color(0xFF2196F3);
+    const backgroundColor = Color(0xFFF5F7FC);
+
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text("Student Page"),
+        title: Text(
+          "Student Page",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.3,
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => CreateStudent()),
+                );
+              },
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 25),
+            ),
+          ),
+        ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(height: 30),
-            Text(
-              "Create Student Data!",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: saveTestData,
-              child: Text('Save Test Student'),
-            ),
-
-            SizedBox(height: 16),
-
-            const Divider(height: 1),
-
-            Expanded(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20),
               child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: students.snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
+                    return Center(
+                      child: const CircularProgressIndicator(
+                        color: primaryColor,
+                      ),
+                    );
                   }
 
                   if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
+                    return Center(
+                      child: Text(
+                        'Error: ${snapshot.error}',
+                        textAlign: TextAlign.center,
+                      ),
+                    );
                   }
 
                   final documents = snapshot.data?.docs ?? [];
 
                   if (documents.isEmpty) {
-                    return Center(child: Text('No student records yet.'));
+                    return Center(
+                      child: Text(
+                        'No student records yet.',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    );
                   }
 
                   return ListView.builder(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: documents.length,
                     itemBuilder: (context, index) {
                       final document = documents[index];
                       final data = document.data();
 
+                      final studentno = data["student_no"] ?? '';
                       final name = data["name"] ?? '';
                       final course = data['course'] ?? '';
 
-                      return ListTile(
-                        title: Text(name),
-                        subtitle: Text(course),
+                      return Card(
+                        elevation: 0,
+                        margin: EdgeInsets.only(bottom: 14),
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadiusGeometry.circular(18),
+                          side: BorderSide(color: Color(0xFFE5EAF2), width: 1),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // // Student icon
+                                  // Container(
+                                  //   width: 50,
+                                  //   height: 50,
+                                  //   decoration: BoxDecoration(
+                                  //     color: Color(0xFFE8F3FF),
+                                  //     borderRadius: BorderRadius.circular(14),
+                                  //   ),
+                                  //   child: Icon(
+                                  //     Icons.person_rounded,
+                                  //     color: primaryColor,
+                                  //     size: 28,
+                                  //   ),
+                                  // ),
+
+                                  // Student Avatar
+                                  CircleAvatar(
+                                    radius: 26,
+                                    backgroundColor: const Color(0xFFE3F0FF),
+                                    child: Text(
+                                      getInitials(name),
+                                      style: const TextStyle(
+                                        color: primaryColor,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 14),
+
+                                  // Student Information
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          name,
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF1E293B),
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 7),
+
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.badge_outlined,
+                                              size: 16,
+                                              color: Color(0xFF94A388),
+                                            ),
+                                            SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                studentno,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: Color(0xFF647488),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Existing delete button
+                                  IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: Color(0xFF94A3B8),
+                                      size: 23,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 14),
+
+                              Container(
+                                width: double.infinity,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFF1F6FD),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.school_outlined,
+                                      size: 17,
+                                      color: primaryColor,
+                                    ),
+
+                                    const SizedBox(width: 7),
+
+                                    Flexible(
+                                      child: Text(
+                                        course,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF475569),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // child: ListTile(
+                        //   isThreeLine: true,
+                        //   leading: Icon(Icons.person),
+                        //   title: Text(name),
+                        //   subtitle: Column(
+                        //     crossAxisAlignment: CrossAxisAlignment.start,
+                        //     children: [Text(studentno), Text(course)],
+                        //   ),
+                        //   trailing: IconButton(
+                        //     onPressed: () {},
+                        //     icon: Icon(Icons.delete),
+                        //   ),
+                        // ),
                       );
                     },
                   );
                 },
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
